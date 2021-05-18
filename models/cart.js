@@ -1,11 +1,11 @@
-const fs = require('fs');
-const path = require('path');
+const fs = require('fs')
+const path = require('path')
 
 const p = path.join(
   path.dirname(require.main.filename),
   'data',
   'cart.json'
-);
+)
 
 module.exports = class Cart {
   static addProduct(id, productPrice) {
@@ -14,70 +14,61 @@ module.exports = class Cart {
       //should have a cart structure present in the file when beginning: {"products": [],"totalPrice":0}
       let cart
       if (!err) {
-        cart = JSON.parse(fileContent);
+        cart = JSON.parse(fileContent)
       }
 
       // Analyze the cart => Find existing product
-      const existingProductIndex = cart.products.findIndex(prod => prod.id === id);
+      const existingProductIndex = cart.products.findIndex(prod => prod.id === id)
 
-      // const existingProduct = cart.products[existingProductIndex];
-
-      let updatedProduct;
       // Add new product/ increase quantity
+      let updatedProduct
+
       if (existingProductIndex > -1) {
-        const existingProduct = cart.products[existingProductIndex];
-        updatedProduct = { ...existingProduct };
-        updatedProduct.qty = updatedProduct.qty + 1;
-        cart.products = [...cart.products];
-        cart.products[existingProductIndex] = updatedProduct;
+        const existingProduct = cart.products[existingProductIndex]
+        updatedProduct = { ...existingProduct }
+        updatedProduct.qty = updatedProduct.qty + 1
+        cart.products = [...cart.products]
+        cart.products[existingProductIndex] = updatedProduct
       } else {
-        updatedProduct = { id: id, qty: 1 };
-        cart.products = [...cart.products, updatedProduct];
+        updatedProduct = { id: id, qty: 1 }
+        cart.products = [...cart.products, updatedProduct]
       }
 
-      cart.totalPrice = cart.totalPrice + +productPrice;
-      fs.writeFile(p, JSON.stringify(cart), err => {
-        console.log(err);
-      });
-    });
+      cart.totalPrice = (+cart.totalPrice + +productPrice).toFixed(2)
+
+      fs.writeFile(p, JSON.stringify(cart), err => console.log(err))
+    })
   }
 
   static deleteProduct(id, productPrice) {
     fs.readFile(p, (err, fileContent) => {
       if (err) {
-        console.error(err);
+        console.error(err)
         return
       }
-      const updatedCart = { ...JSON.parse(fileContent) };
-      const product = updatedCart.products.find(prod => prod.id === id);
-      console.log('55', product)
+
+      const updatedCart = { ...JSON.parse(fileContent) }
+      const product = updatedCart.products.find(prod => prod.id === id)
+
+      //Check if no product found with that id in the db
       if (!product) {
         console.log('Product no longer available')
-        //Can't find product in the db
-        return;
+        return
       }
 
-      const productQty = product.qty;
-      updatedCart.products = updatedCart.products.filter(
-        prod => prod.id !== id
-      );
+      const productQty = product.qty
+      updatedCart.products = updatedCart.products.filter(prod => prod.id !== id)
 
-      updatedCart.totalPrice = updatedCart.totalPrice - productPrice * productQty;
+      updatedCart.totalPrice = updatedCart.totalPrice - productPrice * productQty
 
-      fs.writeFile(p, JSON.stringify(updatedCart), err => {
-        console.log(err);
-      });
-    });
+      fs.writeFile(p, JSON.stringify(updatedCart), err => console.log(err))
+    })
   }
 
   static getCart(cb) {
     fs.readFile(p, (err, fileContent) => {
-      const cart = JSON.parse(fileContent);
-      if (err) {
-        cb(null);
-      } else {
-        cb(cart);
-      }
-    });
+      const cart = JSON.parse(fileContent)
+      err ? cb(null) : cb(cart)
+    })
   }
-};
+}
